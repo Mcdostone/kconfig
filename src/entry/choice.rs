@@ -1,7 +1,8 @@
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    combinator::map,
+    character::complete::newline,
+    combinator::{map, opt},
     multi::many0,
     sequence::{delimited, pair},
     IResult, Parser,
@@ -13,6 +14,7 @@ use serde::Serialize;
 
 use crate::{
     attribute::{optional::parse_optional, parse_attribute, r#type::parse_type, Attribute},
+    symbol::parse_constant_symbol,
     util::ws,
     Entry, KconfigInput,
 };
@@ -45,7 +47,7 @@ fn parse_choice_attributes(input: KconfigInput) -> IResult<KconfigInput, Vec<Att
 pub fn parse_choice(input: KconfigInput) -> IResult<KconfigInput, Choice> {
     map(
         delimited(
-            tag("choice"),
+            pair(tag("choice"), opt(pair(parse_constant_symbol, newline))),
             pair(parse_choice_attributes, many0(ws(parse_entry))),
             ws(tag("endchoice")),
         ),
